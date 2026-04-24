@@ -1,0 +1,14 @@
+{
+  "name": "recruitee-webflow-sync",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Syncs Recruitee job offers into a Webflow CMS collection. Runs hourly on Vercel Cron.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  }
+}
