@@ -31,15 +31,15 @@ vercel.json         # Hourly cron at `0 * * * *`
 
 The code is wired for a collection named "Jobs" with these fields:
 
-| Field      | Slug         | Type        | Source                                  |
-|------------|--------------|-------------|-----------------------------------------|
-| Title      | `name`       | Plain text  | `offer.title`                           |
-| Slug       | `slug`       | Plain text  | `offer.slug` (Recruitee-provided)       |
-| Link       | `link`       | Link        | `offer.careers_url` (fallback `offer.url`) |
-| Department | `department` | Plain text  | `offer.department` (object or string)   |
-| Brand      | `brand`      | Plain text  | `WEBFLOW_BRAND_DEFAULT` env var         |
+| Webflow field | Source                                        |
+|---------------|-----------------------------------------------|
+| Title         | `offer.title`                                 |
+| Slug          | `offer.slug` (Recruitee-provided)             |
+| Link          | `offer.careers_url` (fallback `offer.url`)    |
+| Location      | `offer.location` (object or string)           |
+| Brand         | `offer.department` (Recruitee's "department" is used as brand) |
 
-If your collection uses different slugs, edit the `FIELDS` map at the top of `lib/sync.js`.
+The code resolves each Webflow slug at runtime from the collection schema (by slug, then display name), so renaming a field in Webflow doesn't require a code change. If you add a new field or change the matching semantics, edit `FIELD_CANDIDATES` at the top of `lib/sync.js`.
 
 ### Matching key
 
@@ -58,7 +58,6 @@ Set in Vercel (Project → Settings → Environment Variables). See `.env.exampl
 | `WEBFLOW_API_TOKEN`       | yes      | Site API token with CMS read/write scope                    |
 | `WEBFLOW_COLLECTION_ID`   | yes      | ID of the Jobs collection                                   |
 | `CRON_SECRET`             | yes      | Shared secret for authorizing requests                      |
-| `WEBFLOW_BRAND_DEFAULT`   | no       | Value written to the `brand` field on every job (default `""`) |
 | `RECRUITEE_OFFERS_URL`    | no       | Override the Recruitee endpoint (defaults to distilled)     |
 
 ## Deploy
