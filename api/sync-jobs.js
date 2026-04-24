@@ -27,10 +27,11 @@ export default async function handler(req, res) {
   }
 
   const collectionId = process.env.WEBFLOW_COLLECTION_ID;
+  const brand = process.env.WEBFLOW_BRAND_DEFAULT || '';
   const startedAt = new Date().toISOString();
 
   try {
-    const stats = await syncJobs({ collectionId });
+    const stats = await syncJobs({ collectionId, brand });
     const finishedAt = new Date().toISOString();
     const ok = stats.errors.length === 0;
     return res.status(ok ? 200 : 207).json({ ok, startedAt, finishedAt, stats });

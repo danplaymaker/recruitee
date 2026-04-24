@@ -8,11 +8,11 @@ Replaces an existing Zapier workflow with a fully controlled pipeline.
 
 1. Fetch all offers from `https://distilled.recruitee.com/api/offers/` (treated as the single source of truth for active jobs).
 2. List every item in the Webflow Jobs collection.
-3. For each Recruitee offer, upsert the matching Webflow item by `recruitee_id` (create if missing, update otherwise).
-4. For every Webflow item whose `recruitee_id` is no longer in the Recruitee response, set `is_active = false`. Items are never deleted or unpublished.
-5. Return a JSON summary of created / updated / deactivated counts.
+3. For each Recruitee offer, upsert the matching Webflow item by `slug` — using Recruitee's `offer.slug` (create if missing, update + un-archive if it already exists).
+4. For every Webflow item whose `slug` is no longer in the Recruitee response, set `isArchived: true`. Items are never deleted or unpublished. Archive is reversible: if a Recruitee offer reappears, the item is un-archived on the next run.
+5. Return a JSON summary of created / updated / archived counts.
 
-The frontend is expected to filter on `is_active = true`.
+Archived items are automatically hidden from the live site by Webflow, so the frontend doesn't need to filter anything.
 
 ## Project layout
 
@@ -29,20 +29,25 @@ vercel.json         # Hourly cron at `0 * * * *`
 
 ## Webflow collection
 
-Create a collection named "Jobs" with these fields (slugs in parentheses are what this code expects):
+The code is wired for a collection named "Jobs" with these fields:
 
-| Field         | Slug            | Type        |
-|---------------|-----------------|-------------|
-| Name          | `name`          | Plain text  |
-| Recruitee ID  | `recruitee-id`  | Plain text  |
-| Location      | `location`      | Plain text  |
-| Department    | `department`    | Plain text  |
-| Job URL       | `job-url`       | Link        |
-| Is Active     | `is-active`     | Switch      |
-| Last Seen At  | `last-seen-at`  | Date/Time   |
-| Synced At     | `synced-at`     | Date/Time   |
+| Field      | Slug         | Type        | Source                                  |
+|------------|--------------|-------------|-----------------------------------------|
+| Title      | `name`       | Plain text  | `offer.title`                           |
+| Slug       | `slug`       | Plain text  | `offer.slug` (Recruitee-provided)       |
+| Link       | `link`       | Link        | `offer.careers_url` (fallback `offer.url`) |
+| Department | `department` | Plain text  | `offer.department` (object or string)   |
+| Brand      | `brand`      | Plain text  | `WEBFLOW_BRAND_DEFAULT` env var         |
 
 If your collection uses different slugs, edit the `FIELDS` map at the top of `lib/sync.js`.
+
+### Matching key
+
+The upsert key is the Webflow `slug` field, populated from Recruitee's `offer.slug`. Recruitee slugs are unique per offer and stable across runs, so they're a safe identifier.
+
+### Deactivating removed jobs
+
+Because the collection has no `is_active` switch, items whose slug disappears from the Recruitee response are marked `isArchived: true` via the Webflow API. Archive is reversible — if the offer comes back, the item is un-archived on the next run. No items are ever deleted.
 
 ## Environment variables
 
@@ -50,10 +55,11 @@ Set in Vercel (Project → Settings → Environment Variables). See `.env.exampl
 
 | Variable                | Required | Purpose                                                     |
 |-------------------------|----------|-------------------------------------------------------------|
-| `WEBFLOW_API_TOKEN`     | yes      | Site API token with CMS read/write scope                    |
-| `WEBFLOW_COLLECTION_ID` | yes      | ID of the Jobs collection                                   |
-| `CRON_SECRET`           | yes      | Shared secret for authorizing requests                      |
-| `RECRUITEE_OFFERS_URL`  | no       | Override the Recruitee endpoint (defaults to distilled)     |
+| `WEBFLOW_API_TOKEN`       | yes      | Site API token with CMS read/write scope                    |
+| `WEBFLOW_COLLECTION_ID`   | yes      | ID of the Jobs collection                                   |
+| `CRON_SECRET`             | yes      | Shared secret for authorizing requests                      |
+| `WEBFLOW_BRAND_DEFAULT`   | no       | Value written to the `brand` field on every job (default `""`) |
+| `RECRUITEE_OFFERS_URL`    | no       | Override the Recruitee endpoint (defaults to distilled)     |
 
 ## Deploy
 
@@ -92,7 +98,8 @@ Response:
     "fetched": 24,
     "created": 1,
     "updated": 23,
-    "deactivated": 2,
+    "reactivated": 0,
+    "archived": 2,
     "errors": []
   }
 }
