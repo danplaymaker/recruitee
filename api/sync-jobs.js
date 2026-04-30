@@ -1,4 +1,5 @@
 import { syncJobs } from '../lib/sync.js';
+import { listSites } from '../lib/webflow.js';
 
 function isAuthorized(req) {
   const secret = process.env.CRON_SECRET;
@@ -24,6 +25,23 @@ export default async function handler(req, res) {
 
   if (!isAuthorized(req)) {
     return res.status(401).json({ ok: false, error: 'Unauthorized' });
+  }
+
+  const url = new URL(req.url || '/', 'http://localhost');
+  if (url.searchParams.get('debug') === 'sites') {
+    try {
+      const data = await listSites();
+      const sites = (data?.sites || []).map((s) => ({
+        id: s.id,
+        displayName: s.displayName,
+        shortName: s.shortName,
+        customDomains: (s.customDomains || []).map((d) => d.url),
+        previewUrl: s.previewUrl,
+      }));
+      return res.status(200).json({ ok: true, sites });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
   }
 
   const collectionId = process.env.WEBFLOW_COLLECTION_ID;
