@@ -55,8 +55,9 @@ Set in Vercel (Project → Settings → Environment Variables). See `.env.exampl
 
 | Variable                | Required | Purpose                                                     |
 |-------------------------|----------|-------------------------------------------------------------|
-| `WEBFLOW_API_TOKEN`       | yes      | Site API token with CMS read/write scope                    |
+| `WEBFLOW_API_TOKEN`       | yes      | Site API token with CMS read/write scope (and `sites:write` for site publish) |
 | `WEBFLOW_COLLECTION_ID`   | yes      | ID of the Jobs collection                                   |
+| `WEBFLOW_SITE_ID`         | yes      | ID of the Webflow site — used to publish the site to the live domain after each sync |
 | `CRON_SECRET`             | yes      | Shared secret for authorizing requests                      |
 | `RECRUITEE_OFFERS_URL`    | no       | Override the Recruitee endpoint (defaults to distilled)     |
 
