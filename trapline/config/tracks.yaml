@@ -1,0 +1,40 @@
+# Canonical track metadata. Aliases handle source-side naming variants
+# (e.g. "Romford BAGS", "RMFD" -> "Romford"). Circumference values are
+# placeholders to be filled in during Phase 1.
+
+tracks:
+  - canonical: Romford
+    country: GB
+    circumference_m: null
+    surface: sand
+    aliases: [Romford BAGS, RMFD, ROM]
+
+  - canonical: Hove
+    country: GB
+    circumference_m: null
+    surface: sand
+    aliases: [Coral Hove, HOV]
+
+  - canonical: Crayford
+    country: GB
+    circumference_m: null
+    surface: sand
+    aliases: [CRY]
+
+  - canonical: Sheffield
+    country: GB
+    circumference_m: null
+    surface: sand
+    aliases: [SHF]
+
+  - canonical: Nottingham
+    country: GB
+    circumference_m: null
+    surface: sand
+    aliases: [Colwick Park, NOT]
+
+  - canonical: Shelbourne Park
+    country: IE
+    circumference_m: null
+    surface: sand
+    aliases: [Shelbourne, SHL]

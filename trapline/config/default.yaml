@@ -1,0 +1,35 @@
+# Default runtime configuration for trapline.
+# Override via TRAPLINE_CONFIG env var pointing at an alternate file.
+
+database:
+  path: data/trapline.db
+
+ingest:
+  user_agent: "trapline/0.1 (+contact@example.invalid)"
+  request_timeout_s: 30
+  rate_limit_per_sec: 1.0
+  retry:
+    max_attempts: 4
+    backoff_base_s: 2.0
+
+features:
+  min_prior_runs: 5            # below this, form features return NaN
+  name_match_threshold: 90     # rapidfuzz score for alias reconciliation
+
+model:
+  registry_path: models/registry.json
+  retrain_cadence_days: 30
+
+execution:
+  edge_threshold_pct: 15       # bet flagged when offered/fair - 1 >= this
+  poll_interval_s: 30
+  commission_pct: 5            # worst-case Betfair commission for backtests
+  staking:
+    mode: flat                 # flat | kelly
+    kelly_fraction: 0.25
+    flat_unit: 1.0
+    max_units_per_bet: 2.0
+
+logging:
+  level: INFO
+  json: false                  # set true in production cron runs
