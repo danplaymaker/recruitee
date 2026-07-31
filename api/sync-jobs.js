@@ -1,5 +1,5 @@
 import { syncJobs } from '../lib/sync.js';
-import { listSites } from '../lib/webflow.js';
+import { listSites, listAllItems, listAllLiveItems, getCollection } from '../lib/webflow.js';
 
 function isAuthorized(req) {
   const secret = process.env.CRON_SECRET;
@@ -28,7 +28,9 @@ export default async function handler(req, res) {
   }
 
   const url = new URL(req.url || '/', 'http://localhost');
-  if (url.searchParams.get('debug') === 'sites') {
+  const debug = url.searchParams.get('debug');
+
+  if (debug === 'sites') {
     try {
       const data = await listSites();
       const sites = (data?.sites || []).map((s) => ({
@@ -39,6 +41,37 @@ export default async function handler(req, res) {
         previewUrl: s.previewUrl,
       }));
       return res.status(200).json({ ok: true, sites });
+    } catch (err) {
+      return res.status(500).json({ ok: false, error: err.message });
+    }
+  }
+
+  if (debug === 'items' || debug === 'items-live') {
+    const collectionId = process.env.WEBFLOW_COLLECTION_ID;
+    try {
+      const [collection, staged, live] = await Promise.all([
+        getCollection(collectionId),
+        listAllItems(collectionId),
+        listAllLiveItems(collectionId),
+      ]);
+      const slugField = 'slug';
+      const summarize = (items) => items.map((it) => ({
+        id: it.id,
+        slug: it?.fieldData?.[slugField] || null,
+        name: it?.fieldData?.name || null,
+        isArchived: it.isArchived === true,
+        isDraft: it.isDraft === true,
+        lastPublished: it.lastPublished || null,
+        lastUpdated: it.lastUpdated || null,
+      }));
+      return res.status(200).json({
+        ok: true,
+        collection: { id: collection?.id, displayName: collection?.displayName, fieldCount: collection?.fields?.length },
+        stagedCount: staged.length,
+        liveCount: live.length,
+        staged: summarize(staged),
+        live: summarize(live),
+      });
     } catch (err) {
       return res.status(500).json({ ok: false, error: err.message });
     }
